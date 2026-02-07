@@ -1,4 +1,4 @@
-import { Logger, NestInterceptor, ExecutionContext, CallHandler } from '@nestjs/common';
+import { Injectable, Logger, NestInterceptor, ExecutionContext, CallHandler } from '@nestjs/common';
 import { Observable } from 'rxjs';
 
 /**
@@ -21,11 +21,4 @@ export class RlsInterceptor implements NestInterceptor {
 
     return next.handle();
   }
-}
-
-// Fix: Add decorator
-function Injectable(): ClassDecorator {
-  return function (target) {
-    return target;
-  };
 }

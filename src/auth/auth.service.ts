@@ -1,10 +1,10 @@
 import { Injectable, UnauthorizedException, ConflictException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
-import * as bcrypt from 'bcrypt';
+import * as bcrypt from 'bcryptjs';
 import { DatabaseService } from '../database/database.service';
 import { LoginDto, RegisterDto, AuthResponseDto } from './dto/auth.dto';
-import { users } from '../database/schema/users';
+import { users } from '../database/schema';
 import { eq } from 'drizzle-orm';
 
 @Injectable()
@@ -47,10 +47,19 @@ export class AuthService {
         role: users.role,
       });
 
-    const tokens = await this.generateTokens(user);
+    // Asegurar que role no es null
+    const userPayload = {
+      id: user.id,
+      email: user.email,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      role: user.role || 'user',
+    };
+
+    const tokens = await this.generateTokens(userPayload);
     
     return {
-      user,
+      user: userPayload,
       ...tokens,
     };
   }
@@ -81,7 +90,7 @@ export class AuthService {
       email: user.email,
       firstName: user.firstName,
       lastName: user.lastName,
-      role: user.role,
+      role: user.role || 'user',
     };
 
     const tokens = await this.generateTokens(userPayload);
