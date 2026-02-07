@@ -6,7 +6,12 @@ import { AppModule } from './../src/app.module';
 describe('AppController (e2e)', () => {
   let app: INestApplication;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
+    process.env.DATABASE_URL = 'postgresql://test:test@localhost:5432/test';
+    process.env.JWT_SECRET = 'test-secret-minimum-32-characters-long';
+    process.env.FRONTEND_URL = 'http://localhost:4200';
+    process.env.PORT = '3000';
+
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
     }).compile();
