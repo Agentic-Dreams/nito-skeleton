@@ -21,3 +21,20 @@ export const {{camelCase name}} = pgTable('{{tableName}}', {
 
 export type {{pascalCase name}}     = InferSelectModel<typeof {{camelCase name}}>;
 export type New{{pascalCase name}}  = InferInsertModel<typeof {{camelCase name}}>;
+{{#if hasManyToMany}}
+
+// ─── Relations (Drizzle ORM) ─────────────────────────────────────────────────
+// Permite usar db.query.{{camelCase name}}.findMany({ with: { ... } })
+// No afecta a los endpoints CRUD — solo habilita joins tipados en el ORM.
+
+import { relations } from 'drizzle-orm';
+{{#each manyToMany}}
+import { {{junctionCamel}} } from './{{junctionKebab}}.schema';
+{{/each}}
+
+export const {{camelCase name}}Relations = relations({{camelCase name}}, ({ many }) => ({
+{{#each manyToMany}}
+  {{junctionCamel}}: many({{junctionCamel}}),
+{{/each}}
+}));
+{{/if}}

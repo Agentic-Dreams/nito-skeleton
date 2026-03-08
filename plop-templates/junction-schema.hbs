@@ -1,0 +1,31 @@
+import { pgTable, uuid, primaryKey } from 'drizzle-orm/pg-core';
+import { relations } from 'drizzle-orm';
+import { {{entity1Camel}} } from './{{entity1Kebab}}.schema';
+import { {{entity2Camel}} } from './{{entity2Kebab}}.schema';
+
+/**
+ * Tabla intermedia para la relación many-to-many {{entity1}} ↔ {{entity2}}.
+ *
+ * Generado automáticamente por `npx plop module`.
+ * Ejecuta `npm run db:generate` tras cualquier cambio para crear la migración.
+ */
+export const {{junctionCamel}} = pgTable('{{junctionTableName}}', {
+  {{entity1Camel}}Id: uuid('{{entity1Snake}}_id').notNull().references(() => {{entity1Camel}}.id, { onDelete: 'cascade' }),
+  {{entity2Camel}}Id: uuid('{{entity2Snake}}_id').notNull().references(() => {{entity2Camel}}.id, { onDelete: 'cascade' }),
+}, (table) => ({
+  pk: primaryKey({ columns: [table.{{entity1Camel}}Id, table.{{entity2Camel}}Id] }),
+}));
+
+// ─── Relations ───────────────────────────────────────────────────────────────
+// Registra ambos extremos para que Drizzle pueda navegar la relación.
+
+export const {{junctionCamel}}Relations = relations({{junctionCamel}}, ({ one }) => ({
+  {{entity1Camel}}: one({{entity1Camel}}, {
+    fields:     [{{junctionCamel}}.{{entity1Camel}}Id],
+    references: [{{entity1Camel}}.id],
+  }),
+  {{entity2Camel}}: one({{entity2Camel}}, {
+    fields:     [{{junctionCamel}}.{{entity2Camel}}Id],
+    references: [{{entity2Camel}}.id],
+  }),
+}));

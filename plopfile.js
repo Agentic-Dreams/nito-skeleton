@@ -220,6 +220,22 @@ function preprocessEntity(entity) {
   const camelName  = toCamelCase(entity.name);
   const pascalName = toPascalCase(entity.name);
 
+  // ── Many-to-many relations ────────────────────────────────────────────────
+  const manyToMany = (entity.manyToMany || []).map(rel => ({
+    ...rel,
+    entity1:      entity.name,
+    entity2:      rel.entity,
+    entity1Camel: camelName,
+    entity2Camel: toCamelCase(rel.entity),
+    entity1Kebab: kebabName,
+    entity2Kebab: toKebabCase(rel.entity),
+    entity1Snake: toSnakeCase(entity.name),
+    entity2Snake: toSnakeCase(rel.entity),
+    junctionTableName: rel.tableName,
+    junctionCamel:     toCamelCase(rel.tableName),
+    junctionKebab:     toKebabCase(rel.tableName),
+  }));
+
   return {
     ...entity,
     allFields,
@@ -228,6 +244,8 @@ function preprocessEntity(entity) {
     drizzleImports:      [...drizzleSet].join(', '),
     filterConfigString:  JSON.stringify(stringFieldNames),
     filterConfigDate:    JSON.stringify(dateFieldNames),
+    manyToMany,
+    hasManyToMany:       manyToMany.length > 0,
     kebabName,
     camelName,
     pascalName,
@@ -322,6 +340,34 @@ module.exports = function (plop) {
           path:         'src/database/schema/{{kebabCase name}}.schema.ts',
           templateFile: 'plop-templates/schema.hbs',
           data:         entity,
+        },
+        // ── Junction tables (many-to-many) ────────────────────────────────
+        ...entity.manyToMany.map(rel => ({
+          type:         'add',
+          path:         `src/database/schema/${rel.junctionKebab}.schema.ts`,
+          templateFile: 'plop-templates/junction-schema.hbs',
+          skipIfExists: true,
+          data:         rel,
+        })),
+        // ── Auto-register module in app.module.ts ─────────────────────────
+        {
+          type:     'modify',
+          path:     'src/app.module.ts',
+          pattern:  /(\n\n@Module)/,
+          template: "\nimport { {{pascalCase name}}Module } from './{{kebabCase name}}/{{kebabCase name}}.module';$1",
+        },
+        {
+          type:     'modify',
+          path:     'src/app.module.ts',
+          pattern:  /(\n  \],\n  providers)/,
+          template: "\n    {{pascalCase name}}Module,$1",
+        },
+        // ── Export schema from index ───────────────────────────────────────
+        {
+          type:     'modify',
+          path:     'src/database/schema/index.ts',
+          pattern:  /([\s\S]*)/,
+          template: "$1export * from './{{kebabCase name}}.schema';\n",
         },
       ];
     },
