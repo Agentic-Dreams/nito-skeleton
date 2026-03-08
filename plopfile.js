@@ -319,7 +319,7 @@ module.exports = function (plop) {
         // ── DB Schema ────────────────────────────────────────────────────
         {
           type:         'add',
-          path:         'src/db/schema/{{kebabCase name}}.schema.ts',
+          path:         'src/database/schema/{{kebabCase name}}.schema.ts',
           templateFile: 'plop-templates/schema.hbs',
           data:         entity,
         },

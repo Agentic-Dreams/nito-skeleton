@@ -6,8 +6,9 @@ import {
 } from '@nestjs/common';
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { eq, sql } from 'drizzle-orm';
-import * as schema from '../db/schema';
-import { {{camelCase name}} } from '../db/schema';
+import * as schema from '../database/schema';
+import { {{camelCase name}} } from '../database/schema';
+import { DRIZZLE_PROVIDER } from '../database/database.module';
 import { Create{{pascalCase name}}Dto } from './dto/create-{{kebabCase name}}.dto';
 import { Update{{pascalCase name}}Dto } from './dto/update-{{kebabCase name}}.dto';
 import { ParsedQuery, PaginatedResponse } from '../common/types';
@@ -32,7 +33,7 @@ export class {{pascalCase name}}Service {
   private readonly logger = new Logger({{pascalCase name}}Service.name);
 
   constructor(
-    @Inject('DRIZZLE') private readonly db: NodePgDatabase<typeof schema>,
+    @Inject(DRIZZLE_PROVIDER) private readonly db: NodePgDatabase<typeof schema>,
     private readonly rlsService: RlsService,
   ) {}
 
