@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { drizzle } from 'drizzle-orm/node-postgres';
 import { Pool } from 'pg';
 import { DatabaseService } from './database.service';
+import { RlsService } from './rls.service';
 import * as schema from './schema';
 
 export const DRIZZLE_PROVIDER = 'DRIZZLE_PROVIDER';
@@ -21,12 +22,13 @@ export const DRIZZLE_PROVIDER = 'DRIZZLE_PROVIDER';
           idleTimeoutMillis: 30000,
           connectionTimeoutMillis: 2000,
         });
-        
+
         return drizzle(pool, { schema });
       },
     },
     DatabaseService,
+    RlsService,
   ],
-  exports: [DRIZZLE_PROVIDER, DatabaseService],
+  exports: [DRIZZLE_PROVIDER, DatabaseService, RlsService],
 })
 export class DatabaseModule {}
