@@ -12,10 +12,10 @@ export const {{camelCase name}} = pgTable('{{tableName}}', {
   {{#each allFields}}
   {{camelCase name}}: {{{drizzleColDef}}},
   {{/each}}
-}, (table) => [
+}, (table) => ({
   // ── Añade tus índices aquí ────────────────────────────────────────────────
-  // index('{{tableName}}_created_at_idx').on(table.createdAt),
-]);
+  // createdAtIdx: index('{{tableName}}_created_at_idx').on(table.createdAt),
+}));
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 

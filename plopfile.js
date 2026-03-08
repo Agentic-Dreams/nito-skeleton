@@ -13,7 +13,7 @@
  *     <entity>.service.ts
  *     <entity>.module.ts
  *     <entity>.service.spec.ts
- *   src/db/schema/<entity>.schema.ts
+ *   src/database/schema/<entity>.schema.ts
  */
 
 const path = require('path');
@@ -209,7 +209,7 @@ function preprocessEntity(entity) {
   });
 
   // drizzle-orm/pg-core imports (schema template)
-  const drizzleSet = new Set(['pgTable', 'uuid', 'timestamp', 'index']);
+  const drizzleSet = new Set(['pgTable', 'uuid', 'timestamp']);
   allFields.forEach(f => {
     const fn = DRIZZLE_FN_MAP[f.type];
     if (fn) drizzleSet.add(fn);

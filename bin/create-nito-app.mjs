@@ -97,7 +97,7 @@ async function main() {
     run(`degit ${REPO}#main "${projectName}"`);
   } else {
     console.log('📦  Cloning with git (degit not found, falling back)...');
-    run(`git clone --depth 1 https://github.com/${REPO}.git "${projectName}"`);
+    run(`git clone --depth 1 --branch feat/code-generator https://github.com/${REPO}.git "${projectName}"`);
     // Remove git history
     run(`rm -rf .git`, targetDir);
   }

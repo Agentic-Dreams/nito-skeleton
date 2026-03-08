@@ -3,6 +3,7 @@ import { NotFoundException } from '@nestjs/common';
 import { {{pascalCase name}}Service } from './{{kebabCase name}}.service';
 import { {{camelCase name}} } from '../database/schema';
 import { RlsService } from '../database/rls.service';
+import { DRIZZLE_PROVIDER } from '../database/database.module';
 
 describe('{{pascalCase name}}Service', () => {
   let service: {{pascalCase name}}Service;
@@ -54,7 +55,7 @@ describe('{{pascalCase name}}Service', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         {{pascalCase name}}Service,
-        { provide: 'DRIZZLE',   useValue: mockDb },
+        { provide: DRIZZLE_PROVIDER, useValue: mockDb },
         { provide: RlsService, useValue: mockRlsService },
       ],
     }).compile();
