@@ -1,0 +1,66 @@
+{
+  "name": "Reserva",
+  "tableName": "reservas",
+  "fields": [
+    {
+      "name": "id",
+      "type": "uuid",
+      "isPrimary": true,
+      "description": "Identificador único de la reserva"
+    },
+    {
+      "name": "perroId",
+      "type": "uuid",
+      "required": true,
+      "description": "UUID del perro asociado a la reserva",
+      "example": "123e4567-e89b-12d3-a456-426614174000"
+    },
+    {
+      "name": "clienteId",
+      "type": "uuid",
+      "required": true,
+      "description": "UUID del cliente propietario del perro",
+      "example": "550e8400-e29b-41d5-a716-446655440000"
+    },
+    {
+      "name": "fechaInicio",
+      "type": "date",
+      "required": true,
+      "description": "Fecha de inicio de la estancia (ISO 8601)",
+      "example": "2026-03-15"
+    },
+    {
+      "name": "fechaFin",
+      "type": "date",
+      "required": true,
+      "description": "Fecha de fin de la estancia (ISO 8601)",
+      "example": "2026-03-20"
+    },
+    {
+      "name": "estado",
+      "type": "string",
+      "required": false,
+      "default": "'pendiente'",
+      "description": "Estado actual de la reserva (pendiente, confirmada, cancelada)",
+      "example": "confirmada",
+      "length": 50
+    },
+    {
+      "name": "notas",
+      "type": "text",
+      "required": false,
+      "description": "Notas adicionales sobre la reserva",
+      "example": "El perro necesita medicación diaria"
+    },
+    {
+      "name": "createdAt",
+      "type": "timestamp",
+      "description": "Fecha de creación del registro"
+    },
+    {
+      "name": "updatedAt",
+      "type": "timestamp",
+      "description": "Fecha de última actualización del registro"
+    }
+  ]
+}

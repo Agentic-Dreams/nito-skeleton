@@ -1,0 +1,175 @@
+import {
+  Controller,
+  Get,
+  Post,
+  Patch,
+  Delete,
+  Body,
+  Param,
+  UseGuards,
+  UsePipes,
+  ParseUUIDPipe,
+} from '@nestjs/common';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+  ApiParam,
+  ApiQuery,
+} from '@nestjs/swagger';
+import { {{pascalCase name}}Service } from './{{kebabCase name}}.service';
+import { Create{{pascalCase name}}Dto } from './dto/create-{{kebabCase name}}.dto';
+import { Update{{pascalCase name}}Dto } from './dto/update-{{kebabCase name}}.dto';
+import { JwtAuthGuard } from '../auth/auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { createQueryParser } from '../common/pipes';
+import { QueryParser, ParsedQueryType } from '../common/decorators/parsed-query.decorator';
+import { UseRls } from '../common/decorators/use-rls.decorator';
+
+interface JwtUser {
+  userId: string;
+  email: string;
+  role: string;
+}
+
+/**
+ * {{pascalCase name}}Controller
+ *
+ * Endpoints CRUD para la entidad {{pascalCase name}}.
+ * Todos los endpoints requieren rol ADMIN y autenticación JWT.
+ *
+ * Base URL: /{{kebabCase name}}
+ */
+@ApiTags('{{kebabCase name}}')
+@Controller('{{kebabCase name}}')
+@UseGuards(JwtAuthGuard, RolesGuard)
+@ApiBearerAuth('JWT-auth')
+@Roles('ADMIN')
+@UseRls()
+export class {{pascalCase name}}Controller {
+  constructor(private readonly {{camelCase name}}Service: {{pascalCase name}}Service) {}
+
+  // ─── POST / ──────────────────────────────────────────────────────────────
+
+  @Post()
+  @ApiOperation({
+    summary: 'Crear un registro de {{pascalCase name}}',
+    description: 'Crea un nuevo registro de {{pascalCase name}} en la base de datos.',
+  })
+  @ApiResponse({
+    status: 201,
+    description: 'Registro {{pascalCase name}} creado correctamente.',
+  })
+  @ApiResponse({ status: 400, description: 'Error de validación en el body.' })
+  @ApiResponse({ status: 401, description: 'No autenticado.' })
+  @ApiResponse({ status: 403, description: 'Sin permiso (se requiere ADMIN).' })
+  async create(
+    @Body() createDto: Create{{pascalCase name}}Dto,
+    @CurrentUser() user: JwtUser,
+  ) {
+    return this.{{camelCase name}}Service.create(createDto, user);
+  }
+
+  // ─── GET / ───────────────────────────────────────────────────────────────
+
+  @Get()
+  @UsePipes(
+    createQueryParser({
+      allowedSortFields: ['createdAt'],
+      defaultSortBy:     'createdAt',
+      defaultSortOrder:  'desc',
+      maxLimit:          100,
+      defaultLimit:      10,
+    }),
+  )
+  @ApiOperation({
+    summary: 'Listar registros de {{pascalCase name}} con filtros y paginación',
+    description: `
+Soporta filtros dinámicos mediante notación de corchetes:
+
+| Ejemplo                              | Descripción                              |
+|--------------------------------------|------------------------------------------|
+| \`?page=2&limit=25\`                   | Paginación                               |
+| \`?sortBy=createdAt&sortOrder=asc\`    | Ordenamiento                             |
+| \`?campo[eq]=valor\`                   | Igualdad exacta                          |
+| \`?campo[ilike]=%texto%\`              | Búsqueda case-insensitive (ILIKE)        |
+| \`?campo[gte]=2026-01-01\`             | Mayor o igual (fechas / números)         |
+| \`?campo[in]=val1,val2\`               | En lista de valores                      |
+| \`?campo[is]=null\`                    | IS NULL                                  |
+    `,
+  })
+  @ApiQuery({ name: 'page',             required: false, type: Number, description: 'Número de página (por defecto: 1)' })
+  @ApiQuery({ name: 'limit',            required: false, type: Number, description: 'Elementos por página (por defecto: 10, máx: 100)' })
+  @ApiQuery({ name: 'sortBy',           required: false, type: String, description: 'Campo por el que ordenar' })
+  @ApiQuery({ name: 'sortOrder',        required: false, enum: ['asc', 'desc'], description: 'Dirección del ordenamiento' })
+  @ApiQuery({ name: 'campo[operador]',  required: false, type: String, description: 'Filtro dinámico. Ej: createdAt[gte]=2026-01-01' })
+  @ApiResponse({ status: 200, description: 'Lista paginada de {{pascalCase name}}.' })
+  @ApiResponse({ status: 400, description: 'Parámetros de query inválidos.' })
+  @ApiResponse({ status: 401, description: 'No autenticado.' })
+  async findAll(
+    @QueryParser() query: ParsedQueryType,
+    @CurrentUser() user: JwtUser,
+  ) {
+    return this.{{camelCase name}}Service.findAll(query, user);
+  }
+
+  // ─── GET /:id ────────────────────────────────────────────────────────────
+
+  @Get(':id')
+  @ApiOperation({
+    summary: 'Obtener un registro de {{pascalCase name}} por ID',
+    description: 'Devuelve un único registro de {{pascalCase name}} buscado por su UUID.',
+  })
+  @ApiParam({ name: 'id', format: 'uuid', description: 'UUID del registro {{pascalCase name}}' })
+  @ApiResponse({ status: 200, description: 'Registro encontrado.' })
+  @ApiResponse({ status: 400, description: 'UUID inválido.' })
+  @ApiResponse({ status: 401, description: 'No autenticado.' })
+  @ApiResponse({ status: 404, description: '{{pascalCase name}} no encontrado.' })
+  async findOne(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() user: JwtUser,
+  ) {
+    return this.{{camelCase name}}Service.findOne(id, user);
+  }
+
+  // ─── PATCH /:id ──────────────────────────────────────────────────────────
+
+  @Patch(':id')
+  @ApiOperation({
+    summary: 'Actualizar un registro de {{pascalCase name}}',
+    description: 'Actualización parcial (PATCH). Solo los campos enviados serán modificados.',
+  })
+  @ApiParam({ name: 'id', format: 'uuid', description: 'UUID del registro {{pascalCase name}}' })
+  @ApiResponse({ status: 200, description: 'Registro actualizado correctamente.' })
+  @ApiResponse({ status: 400, description: 'Error de validación o transición de estado inválida.' })
+  @ApiResponse({ status: 401, description: 'No autenticado.' })
+  @ApiResponse({ status: 404, description: '{{pascalCase name}} no encontrado.' })
+  async update(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() updateDto: Update{{pascalCase name}}Dto,
+    @CurrentUser() user: JwtUser,
+  ) {
+    return this.{{camelCase name}}Service.update(id, updateDto, user);
+  }
+
+  // ─── DELETE /:id ─────────────────────────────────────────────────────────
+
+  @Delete(':id')
+  @ApiOperation({
+    summary: 'Eliminar un registro de {{pascalCase name}}',
+    description: 'Elimina permanentemente el registro. Operación irreversible.',
+  })
+  @ApiParam({ name: 'id', format: 'uuid', description: 'UUID del registro {{pascalCase name}}' })
+  @ApiResponse({ status: 200, description: 'Registro eliminado correctamente.' })
+  @ApiResponse({ status: 401, description: 'No autenticado.' })
+  @ApiResponse({ status: 404, description: '{{pascalCase name}} no encontrado.' })
+  async remove(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() user: JwtUser,
+  ) {
+    return this.{{camelCase name}}Service.remove(id, user);
+  }
+}

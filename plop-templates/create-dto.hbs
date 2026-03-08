@@ -1,0 +1,25 @@
+import { ApiProperty } from '@nestjs/swagger';
+import { {{validatorImports}} } from 'class-validator';
+
+/**
+ * DTO para la creación de {{pascalCase name}}.
+ *
+ * Generado automáticamente por `npx plop module`.
+ * Edita este archivo si necesitas añadir validaciones personalizadas.
+ */
+export class Create{{pascalCase name}}Dto {
+{{#each dtoFields}}
+  // ─── {{name}} ─────────────────────────────────────────────────────────────
+  @ApiProperty({
+    description: '{{description}}',
+    example: {{{exampleStr}}},
+    required: {{#if isOptional}}false{{else}}true{{/if}},
+    type: '{{swaggerType}}',
+  })
+  {{#each validators}}
+  {{this}}
+  {{/each}}
+  {{camelCase name}}{{#if isOptional}}?{{/if}}: {{tsType}};
+
+{{/each}}
+}

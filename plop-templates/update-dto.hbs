@@ -1,0 +1,11 @@
+import { ApiProperty, PartialType } from '@nestjs/swagger';
+import { IsOptional } from 'class-validator';
+import { Create{{pascalCase name}}Dto } from './create-{{kebabCase name}}.dto';
+
+/**
+ * DTO para la actualización parcial de {{pascalCase name}}.
+ *
+ * Extiende el DTO de creación haciendo todos los campos opcionales.
+ * Añade aquí campos extra (p.ej. transiciones de estado) si son necesarios.
+ */
+export class Update{{pascalCase name}}Dto extends PartialType(Create{{pascalCase name}}Dto) {}

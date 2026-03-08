@@ -1,0 +1,23 @@
+import { {{drizzleImports}} } from 'drizzle-orm/pg-core';
+import { InferSelectModel, InferInsertModel } from 'drizzle-orm';
+
+/**
+ * Schema Drizzle para la tabla `{{tableName}}`.
+ *
+ * Generado automáticamente por `npx plop module`.
+ * Añade manualmente las FK constraints y los índices adicionales
+ * que necesites, y luego ejecuta `npm run db:generate` para crear la migración.
+ */
+export const {{camelCase name}} = pgTable('{{tableName}}', {
+  {{#each allFields}}
+  {{camelCase name}}: {{{drizzleColDef}}},
+  {{/each}}
+}, (table) => [
+  // ── Añade tus índices aquí ────────────────────────────────────────────────
+  // index('{{tableName}}_created_at_idx').on(table.createdAt),
+]);
+
+// ─── Types ───────────────────────────────────────────────────────────────────
+
+export type {{pascalCase name}}     = InferSelectModel<typeof {{camelCase name}}>;
+export type New{{pascalCase name}}  = InferInsertModel<typeof {{camelCase name}}>;

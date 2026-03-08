@@ -1,0 +1,150 @@
+import {
+  Injectable,
+  Inject,
+  NotFoundException,
+  Logger,
+} from '@nestjs/common';
+import { NodePgDatabase } from 'drizzle-orm/node-postgres';
+import { eq, sql } from 'drizzle-orm';
+import * as schema from '../db/schema';
+import { {{camelCase name}} } from '../db/schema';
+import { Create{{pascalCase name}}Dto } from './dto/create-{{kebabCase name}}.dto';
+import { Update{{pascalCase name}}Dto } from './dto/update-{{kebabCase name}}.dto';
+import { ParsedQuery, PaginatedResponse } from '../common/types';
+import { buildWhereClause, FilterConfig } from '../common/utils/filter-builder.util';
+import { paginate } from '../common/utils/paginate.util';
+import { RlsService } from '../database/rls.service';
+
+interface JwtUser {
+  userId: string;
+  email: string;
+  role: string;
+}
+
+/** Configuración de filtros dinámicos para {{pascalCase name}} */
+const {{upperCase (camelCase name)}}_FILTER_CONFIG: FilterConfig<typeof {{camelCase name}}> = {
+  stringFields: {{{filterConfigString}}},
+  dateFields:   {{{filterConfigDate}}},
+};
+
+@Injectable()
+export class {{pascalCase name}}Service {
+  private readonly logger = new Logger({{pascalCase name}}Service.name);
+
+  constructor(
+    @Inject('DRIZZLE') private readonly db: NodePgDatabase<typeof schema>,
+    private readonly rlsService: RlsService,
+  ) {}
+
+  // ─── CREATE ──────────────────────────────────────────────────────────────
+
+  async create(createDto: Create{{pascalCase name}}Dto, user: JwtUser, tx?: any) {
+    const db = tx || this.db;
+    const [record] = await db
+      .insert({{camelCase name}})
+      .values(createDto)
+      .returning();
+    return record;
+  }
+
+  // ─── FIND ALL (paginado + filtros dinámicos) ──────────────────────────────
+
+  async findAll(query: ParsedQuery, user: JwtUser): Promise<PaginatedResponse<unknown>> {
+    return this.rlsService.execute(user, async (tx) => {
+      const { filters, pagination, sort } = query;
+      const whereClause = buildWhereClause(filters, {{camelCase name}}, {{upperCase (camelCase name)}}_FILTER_CONFIG);
+
+      let dataQuery = tx.select().from({{camelCase name}});
+      if (whereClause) dataQuery = dataQuery.where(whereClause) as typeof dataQuery;
+
+      // Ordenamiento dinámico
+      if (sort.sortBy) {
+        const tableObj = {{camelCase name}} as unknown as Record<string, unknown>;
+        const column   = tableObj[sort.sortBy];
+        if (column) {
+          dataQuery = dataQuery.orderBy(
+            sort.sortOrder === 'desc' ? sql`${column} DESC` : sql`${column} ASC`,
+          ) as typeof dataQuery;
+        }
+      } else {
+        dataQuery = dataQuery.orderBy({{camelCase name}}.createdAt) as typeof dataQuery;
+      }
+
+      let countQuery = tx.select({ count: sql<number>`count(*)` }).from({{camelCase name}});
+      if (whereClause) countQuery = countQuery.where(whereClause) as typeof countQuery;
+
+      const countPromise = countQuery.then(r => r[0]?.count || 0);
+
+      return paginate(
+        dataQuery as unknown as { limit: (n: number) => { offset: (n: number) => Promise<unknown[]> } },
+        countPromise,
+        pagination,
+      );
+    });
+  }
+
+  // ─── FIND ONE ─────────────────────────────────────────────────────────────
+
+  async findOne(id: string, user: JwtUser) {
+    return this.rlsService.execute(user, async (tx) => {
+      const [record] = await tx
+        .select()
+        .from({{camelCase name}})
+        .where(eq({{camelCase name}}.id, id))
+        .limit(1);
+
+      if (!record) {
+        throw new NotFoundException(`{{pascalCase name}} with ID ${id} not found`);
+      }
+
+      return record;
+    });
+  }
+
+  // ─── UPDATE ───────────────────────────────────────────────────────────────
+
+  async update(id: string, updateDto: Update{{pascalCase name}}Dto, user: JwtUser, tx?: any) {
+    const exec = async (db: any) => {
+      const [updated] = await db
+        .update({{camelCase name}})
+        .set({ ...updateDto, updatedAt: new Date() })
+        .where(eq({{camelCase name}}.id, id))
+        .returning();
+
+      if (!updated) {
+        throw new NotFoundException(`{{pascalCase name}} with ID ${id} not found`);
+      }
+
+      return updated;
+    };
+
+    if (tx) return exec(tx);
+    return this.rlsService.execute(user, exec);
+  }
+
+  // ─── REMOVE ───────────────────────────────────────────────────────────────
+
+  async remove(id: string, user: JwtUser, tx?: any) {
+    const exec = async (db: any) => {
+      const [record] = await db
+        .select()
+        .from({{camelCase name}})
+        .where(eq({{camelCase name}}.id, id))
+        .limit(1);
+
+      if (!record) {
+        throw new NotFoundException(`{{pascalCase name}} with ID ${id} not found`);
+      }
+
+      const [deleted] = await db
+        .delete({{camelCase name}})
+        .where(eq({{camelCase name}}.id, id))
+        .returning();
+
+      return deleted;
+    };
+
+    if (tx) return exec(tx);
+    return this.rlsService.execute(user, exec);
+  }
+}
