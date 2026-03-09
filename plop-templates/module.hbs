@@ -2,15 +2,11 @@ import { Module } from '@nestjs/common';
 import { {{pascalCase name}}Service } from './{{kebabCase name}}.service';
 import { {{pascalCase name}}Controller } from './{{kebabCase name}}.controller';
 import { DatabaseModule } from '../database/database.module';
-import { RlsService } from '../database/rls.service';
 
 @Module({
   imports: [DatabaseModule],
   controllers: [{{pascalCase name}}Controller],
-  providers: [
-    {{pascalCase name}}Service,
-    RlsService,
-  ],
+  providers: [{{pascalCase name}}Service],
   exports: [{{pascalCase name}}Service],
 })
 export class {{pascalCase name}}Module {}

@@ -94,7 +94,7 @@ async function main() {
   // ── 3. Clone skeleton ────────────────────────────────────────────────────
   if (hasBin('degit')) {
     console.log('📦  Cloning with degit...');
-    run(`degit ${REPO}#main "${projectName}"`);
+    run(`degit ${REPO}#feat/code-generator "${projectName}"`);
   } else {
     console.log('📦  Cloning with git (degit not found, falling back)...');
     run(`git clone --depth 1 --branch feat/code-generator https://github.com/${REPO}.git "${projectName}"`);

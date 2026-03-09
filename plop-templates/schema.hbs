@@ -1,12 +1,19 @@
 import { {{drizzleImports}} } from 'drizzle-orm/pg-core';
-import { InferSelectModel, InferInsertModel } from 'drizzle-orm';
-
+import { InferSelectModel, InferInsertModel{{#if hasManyToMany}}, relations{{/if}} } from 'drizzle-orm';
+{{#each referencedEntities}}
+import { {{camel}} } from './{{kebab}}.schema';
+{{/each}}
+{{#if hasManyToMany}}
+{{#each manyToMany}}
+import { {{junctionCamel}} } from './{{junctionKebab}}.schema';
+{{/each}}
+{{/if}}
 /**
  * Schema Drizzle para la tabla `{{tableName}}`.
  *
  * Generado automáticamente por `npx plop module`.
- * Añade manualmente las FK constraints y los índices adicionales
- * que necesites, y luego ejecuta `npm run db:generate` para crear la migración.
+ * Añade manualmente los índices adicionales que necesites
+ * y luego ejecuta `npm run db:generate` para crear la migración.
  */
 export const {{camelCase name}} = pgTable('{{tableName}}', {
   {{#each allFields}}
@@ -26,11 +33,6 @@ export type New{{pascalCase name}}  = InferInsertModel<typeof {{camelCase name}}
 // ─── Relations (Drizzle ORM) ─────────────────────────────────────────────────
 // Permite usar db.query.{{camelCase name}}.findMany({ with: { ... } })
 // No afecta a los endpoints CRUD — solo habilita joins tipados en el ORM.
-
-import { relations } from 'drizzle-orm';
-{{#each manyToMany}}
-import { {{junctionCamel}} } from './{{junctionKebab}}.schema';
-{{/each}}
 
 export const {{camelCase name}}Relations = relations({{camelCase name}}, ({ many }) => ({
 {{#each manyToMany}}

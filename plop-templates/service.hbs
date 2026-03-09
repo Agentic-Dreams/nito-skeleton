@@ -23,9 +23,11 @@ interface JwtUser {
 }
 
 /** Configuración de filtros dinámicos para {{pascalCase name}} */
-const {{upperCase (camelCase name)}}_FILTER_CONFIG: FilterConfig<typeof {{camelCase name}}> = {
-  stringFields: {{{filterConfigString}}},
-  dateFields:   {{{filterConfigDate}}},
+const {{constantCase name}}_FILTER_CONFIG: FilterConfig<typeof {{camelCase name}}> = {
+  stringFields:  {{{filterConfigString}}},
+  dateFields:    {{{filterConfigDate}}},
+  numberFields:  {{{filterConfigNumber}}},
+  booleanFields: {{{filterConfigBoolean}}},
 };
 
 @Injectable()
@@ -40,12 +42,16 @@ export class {{pascalCase name}}Service {
   // ─── CREATE ──────────────────────────────────────────────────────────────
 
   async create(createDto: Create{{pascalCase name}}Dto, user: JwtUser, tx?: any) {
-    const db = tx || this.db;
-    const [record] = await db
-      .insert({{camelCase name}})
-      .values(createDto)
-      .returning();
-    return record;
+    const exec = async (db: any) => {
+      const [record] = await db
+        .insert({{camelCase name}})
+        .values(createDto)
+        .returning();
+      return record;
+    };
+
+    if (tx) return exec(tx);
+    return this.rlsService.execute(user, exec);
   }
 
   // ─── FIND ALL (paginado + filtros dinámicos) ──────────────────────────────
@@ -53,7 +59,7 @@ export class {{pascalCase name}}Service {
   async findAll(query: ParsedQuery, user: JwtUser): Promise<PaginatedResponse<unknown>> {
     return this.rlsService.execute(user, async (tx) => {
       const { filters, pagination, sort } = query;
-      const whereClause = buildWhereClause(filters, {{camelCase name}}, {{upperCase (camelCase name)}}_FILTER_CONFIG);
+      const whereClause = buildWhereClause(filters, {{camelCase name}}, {{constantCase name}}_FILTER_CONFIG);
 
       let dataQuery = tx.select().from({{camelCase name}});
       if (whereClause) dataQuery = dataQuery.where(whereClause) as typeof dataQuery;
@@ -68,7 +74,7 @@ export class {{pascalCase name}}Service {
           ) as typeof dataQuery;
         }
       } else {
-        dataQuery = dataQuery.orderBy({{camelCase name}}.createdAt) as typeof dataQuery;
+        dataQuery = dataQuery.orderBy({{camelCase name}}.{{defaultSortField}}) as typeof dataQuery;
       }
 
       let countQuery = tx.select({ count: sql<number>`count(*)` }).from({{camelCase name}});

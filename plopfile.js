@@ -131,6 +131,7 @@ function buildDrizzleColDef(field) {
   } else {
     if (field.default !== undefined) def += `.default(${field.default})`;
     if (field.required)              def += '.notNull()';
+    if (field.references)            def += `.references(() => ${toCamelCase(field.references)}.id)`;
   }
 
   return def;
@@ -161,8 +162,10 @@ const AUTO_FIELDS = ['id', 'createdAt', 'updatedAt'];
  *   kebabName / camelName / pascalName
  */
 function preprocessEntity(entity) {
-  const stringFieldNames = [];
-  const dateFieldNames   = [];
+  const stringFieldNames  = [];
+  const dateFieldNames    = [];
+  const numberFieldNames  = [];
+  const booleanFieldNames = [];
 
   const allFields = entity.fields.map(field => {
     const isAuto     = AUTO_FIELDS.includes(field.name);
@@ -178,8 +181,10 @@ function preprocessEntity(entity) {
 
     // Accumulate fields for FilterConfig
     if (isDtoField) {
-      if (['string', 'text', 'uuid'].includes(field.type)) stringFieldNames.push(field.name);
-      if (['date', 'timestamp'].includes(field.type))       dateFieldNames.push(field.name);
+      if (['string', 'text', 'uuid'].includes(field.type))  stringFieldNames.push(field.name);
+      if (['date', 'timestamp'].includes(field.type))        dateFieldNames.push(field.name);
+      if (['integer', 'decimal'].includes(field.type))       numberFieldNames.push(field.name);
+      if (field.type === 'boolean')                          booleanFieldNames.push(field.name);
     }
 
     return {
@@ -215,6 +220,27 @@ function preprocessEntity(entity) {
     if (fn) drizzleSet.add(fn);
   });
 
+  // ── Referenced entities (for FK imports in schema template) ─────────────
+  const seenRefs = new Set();
+  const referencedEntities = allFields
+    .filter(f => f.references)
+    .reduce((acc, f) => {
+      if (!seenRefs.has(f.references)) {
+        seenRefs.add(f.references);
+        acc.push({
+          entity: f.references,
+          camel:  toCamelCase(f.references),
+          kebab:  toKebabCase(f.references),
+        });
+      }
+      return acc;
+    }, []);
+
+  // ── Default sort field (falls back to primary key if no createdAt) ────────
+  const defaultSortField = entity.fields.some(f => f.name === 'createdAt')
+    ? 'createdAt'
+    : (entity.fields.find(f => f.isPrimary)?.name || entity.fields[0]?.name || 'id');
+
   // ── Name variants (used for path templating in plopfile actions) ──────────
   const kebabName  = toKebabCase(entity.name);
   const camelName  = toCamelCase(entity.name);
@@ -240,12 +266,17 @@ function preprocessEntity(entity) {
     ...entity,
     allFields,
     dtoFields,
-    validatorImports:    [...validatorSet].join(', '),
-    drizzleImports:      [...drizzleSet].join(', '),
-    filterConfigString:  JSON.stringify(stringFieldNames),
-    filterConfigDate:    JSON.stringify(dateFieldNames),
+    validatorImports:     [...validatorSet].join(', '),
+    drizzleImports:       [...drizzleSet].join(', '),
+    filterConfigString:   JSON.stringify(stringFieldNames),
+    filterConfigDate:     JSON.stringify(dateFieldNames),
+    filterConfigNumber:   JSON.stringify(numberFieldNames),
+    filterConfigBoolean:  JSON.stringify(booleanFieldNames),
+    referencedEntities,
+    hasReferencedEntities: referencedEntities.length > 0,
+    defaultSortField,
     manyToMany,
-    hasManyToMany:       manyToMany.length > 0,
+    hasManyToMany:        manyToMany.length > 0,
     kebabName,
     camelName,
     pascalName,
@@ -349,25 +380,58 @@ module.exports = function (plop) {
           skipIfExists: true,
           data:         rel,
         })),
-        // ── Auto-register module in app.module.ts ─────────────────────────
+        // ── Auto-register module in app.module.ts (idempotent) ───────────────
         {
           type:     'modify',
           path:     'src/app.module.ts',
           pattern:  /(\n\n@Module)/,
           template: "\nimport { {{pascalCase name}}Module } from './{{kebabCase name}}/{{kebabCase name}}.module';$1",
+          skip:     () => {
+            try {
+              const content = fs.readFileSync(
+                path.resolve(process.cwd(), 'src/app.module.ts'), 'utf-8',
+              );
+              if (content.includes(`${entity.pascalName}Module`)) {
+                return `${entity.pascalName}Module already registered — skipping`;
+              }
+            } catch { /* file may not exist yet */ }
+            return false;
+          },
         },
         {
           type:     'modify',
           path:     'src/app.module.ts',
           pattern:  /(\n  \],\n  providers)/,
           template: "\n    {{pascalCase name}}Module,$1",
+          skip:     () => {
+            try {
+              const content = fs.readFileSync(
+                path.resolve(process.cwd(), 'src/app.module.ts'), 'utf-8',
+              );
+              if (content.includes(`${entity.pascalName}Module`)) {
+                return `${entity.pascalName}Module already in imports[] — skipping`;
+              }
+            } catch { /* file may not exist yet */ }
+            return false;
+          },
         },
-        // ── Export schema from index ───────────────────────────────────────
+        // ── Export schema from index (idempotent) ─────────────────────────
         {
           type:     'modify',
           path:     'src/database/schema/index.ts',
           pattern:  /([\s\S]*)/,
           template: "$1export * from './{{kebabCase name}}.schema';\n",
+          skip:     () => {
+            try {
+              const content = fs.readFileSync(
+                path.resolve(process.cwd(), 'src/database/schema/index.ts'), 'utf-8',
+              );
+              if (content.includes(`./${entity.kebabName}.schema`)) {
+                return `${entity.kebabName}.schema already exported — skipping`;
+              }
+            } catch { /* file may not exist yet */ }
+            return false;
+          },
         },
       ];
     },
