@@ -11,6 +11,12 @@
 
 - [ ] **Sincronizar plop-templates con los proyectos hijos**: el plopfile del skeleton (fixes de QA, auto-registro en app.module, many-to-many) va por delante del de dog-reservation. Definir el flujo de sincronización skeleton → proyectos (¿script de copia?, ¿release del skeleton?) para que las mejoras no diverjan.
 
+## Seguridad / Robustez (patrones vistos en Tabigal)
+
+- [ ] **Rate limiting con `@nestjs/throttler`**: guard global laxo (p.ej. 500 req/min) + límite estricto por decorador en los endpoints de auth del template (`@Throttle({ default: { limit: 5, ttl: 60000 } })` en login/register). Compatible con Fastify. Referencia: `app.module.ts` de portal-empleado-tabigal-nestjs.
+- [ ] **Swagger protegido fuera de dev**: proteger `/api/docs` y `/api/docs-json` con basic auth cuando `NODE_ENV !== 'development'` (credenciales por env `SWAGGER_USER`/`SWAGGER_PASSWORD`). En Fastify: hook `onRequest` o `@fastify/basic-auth`. Referencia: `main.ts` de Tabigal (usa `express-basic-auth`).
+- [ ] **Crons condicionados por entorno**: patrón `...(process.env.ENABLE_CRONS === 'true' ? [CronModule] : [])` en `app.module.ts` con un cron de ejemplo. Evita crons en local/test y duplicados con múltiples réplicas. Añadir `ENABLE_CRONS` a `env.validation.ts` y `.env.example`.
+
 ## Infraestructura
 
 - [ ] **Directorio `deploy/`**: existe sin versionar en el working tree (docker-compose de development). Decidir si se commitea como parte del skeleton o se descarta.
