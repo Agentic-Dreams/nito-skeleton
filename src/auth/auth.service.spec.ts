@@ -5,14 +5,11 @@ import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { ConflictException, UnauthorizedException } from '@nestjs/common';
 import * as bcrypt from 'bcryptjs';
-import { users } from '../database/schema';
 
 jest.mock('bcryptjs');
 
 describe('AuthService', () => {
   let service: AuthService;
-  let databaseService: jest.Mocked<DatabaseService>;
-  let jwtService: jest.Mocked<JwtService>;
 
   const mockDb = {
     query: {
@@ -53,8 +50,6 @@ describe('AuthService', () => {
     }).compile();
 
     service = module.get<AuthService>(AuthService);
-    databaseService = module.get(DatabaseService);
-    jwtService = module.get(JwtService);
   });
 
   afterEach(() => {

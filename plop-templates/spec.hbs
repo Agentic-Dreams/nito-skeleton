@@ -3,7 +3,7 @@ import { NotFoundException } from '@nestjs/common';
 import { {{pascalCase name}}Service } from './{{kebabCase name}}.service';
 import { {{camelCase name}} } from '../database/schema';
 import { RlsService } from '../database/rls.service';
-import { DRIZZLE_PROVIDER } from '../database/database.module';
+import { DRIZZLE_PROVIDER } from '../database/database.constants';
 
 describe('{{pascalCase name}}Service', () => {
   let service: {{pascalCase name}}Service;

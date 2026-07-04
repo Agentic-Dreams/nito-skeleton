@@ -32,7 +32,8 @@ export class AllExceptionsFilter implements ExceptionFilter {
       exception instanceof Error ? exception.stack : undefined,
     );
 
-    response.status(status).json({
+    // .send() funciona tanto con Fastify (reply) como con Express (response)
+    response.status(status).send({
       statusCode: status,
       timestamp: new Date().toISOString(),
       path: request.url,

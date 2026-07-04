@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { DatabaseService } from './database.service';
-import { DRIZZLE_PROVIDER } from './database.module';
+import { DRIZZLE_PROVIDER } from './database.constants';
 
 describe('DatabaseService', () => {
   let service: DatabaseService;

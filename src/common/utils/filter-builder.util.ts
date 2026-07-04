@@ -36,20 +36,6 @@ import {
 import { PgTable, PgColumn } from 'drizzle-orm/pg-core';
 import { FilterMap, FieldFilter, LogicalOperators, FilterOperator } from '../types/query.types';
 
-/** Mapeo de operadores a funciones de Drizzle */
-const OPERATOR_MAP: Record<string, string> = {
-  eq: 'eq',
-  ne: 'ne',
-  gt: 'gt',
-  gte: 'gte',
-  lt: 'lt',
-  lte: 'lte',
-  like: 'like',
-  ilike: 'ilike',
-  in: 'inArray',
-  nin: 'notInArray',
-};
-
 /** Configuración de tipos de campos para un tabla */
 export interface FilterConfig<T extends PgTable = PgTable> {
   /** Campos de tipo string (para operadores like/ilike) */
@@ -118,7 +104,7 @@ export function buildWhereClause<T extends PgTable>(
     // El valor puede ser un FieldFilter o un valor directo
     if (filterValue && typeof filterValue === 'object' && !Array.isArray(filterValue)) {
       const fieldFilter = filterValue as FieldFilter;
-      const condition = buildFieldCondition(column, fieldFilter, config);
+      const condition = buildFieldCondition(column, fieldFilter);
       if (condition) {
         conditions.push(condition);
       }
@@ -140,12 +126,11 @@ export function buildWhereClause<T extends PgTable>(
 function buildFieldCondition(
   column: PgColumn,
   filter: FieldFilter,
-  config?: FilterConfig<any>,
 ): SQL | undefined {
   const conditions: SQL[] = [];
 
   for (const [operator, rawValue] of Object.entries(filter)) {
-    const condition = buildOperatorCondition(column, operator as FilterOperator, rawValue, config);
+    const condition = buildOperatorCondition(column, operator as FilterOperator, rawValue);
     if (condition) {
       conditions.push(condition);
     }
@@ -163,7 +148,6 @@ function buildOperatorCondition(
   column: PgColumn,
   operator: FilterOperator,
   value: unknown,
-  config?: FilterConfig,
 ): SQL | undefined {
   switch (operator) {
     case 'eq':

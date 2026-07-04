@@ -22,7 +22,7 @@
 import { Injectable, Inject, Logger } from '@nestjs/common';
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { sql } from 'drizzle-orm';
-import { DRIZZLE_PROVIDER } from './database.module';
+import { DRIZZLE_PROVIDER } from './database.constants';
 import * as schema from './schema';
 import { RlsContext, RlsTransactionCallback } from './types/rls.types';
 

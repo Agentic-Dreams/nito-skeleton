@@ -104,7 +104,7 @@ export async function paginateDb<T extends PgTable, S extends Record<string, unk
 
   // Build count query
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let countQuery = (db as any).select({ count: sql<number>`count(*)` }).from(table) as {
+  const countQuery = (db as any).select({ count: sql<number>`count(*)` }).from(table) as {
     where?: (c: SQL) => Promise<{ count: number }[]>;
   };
 

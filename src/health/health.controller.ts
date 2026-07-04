@@ -3,7 +3,6 @@ import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import {
   HealthCheck,
   HealthCheckService,
-  TypeOrmHealthIndicator,
   DiskHealthIndicator,
   MemoryHealthIndicator,
 } from '@nestjs/terminus';
@@ -22,9 +21,10 @@ export class HealthController {
   @ApiOperation({ summary: 'Check application health' })
   check() {
     return this.health.check([
-      () => this.disk.checkStorage('storage', { path: '/', threshold: 250 * 1024 * 1024 * 1024 }),
-      () => this.memory.checkHeap('memory_heap', 150 * 1024 * 1024),
-      () => this.memory.checkRSS('memory_rss', 150 * 1024 * 1024),
+      // Falla si el disco está por encima del 95% de uso
+      () => this.disk.checkStorage('storage', { path: '/', thresholdPercent: 0.95 }),
+      () => this.memory.checkHeap('memory_heap', 512 * 1024 * 1024),
+      () => this.memory.checkRSS('memory_rss', 1024 * 1024 * 1024),
     ]);
   }
 }

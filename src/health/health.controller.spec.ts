@@ -1,12 +1,25 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { HealthController } from './health.controller';
-import { HealthCheckService } from '@nestjs/terminus';
+import {
+  HealthCheckService,
+  DiskHealthIndicator,
+  MemoryHealthIndicator,
+} from '@nestjs/terminus';
 
 describe('HealthController', () => {
   let controller: HealthController;
 
   const mockHealthCheckService = {
     check: jest.fn(),
+  };
+
+  const mockDiskHealthIndicator = {
+    checkStorage: jest.fn(),
+  };
+
+  const mockMemoryHealthIndicator = {
+    checkHeap: jest.fn(),
+    checkRSS: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -16,6 +29,14 @@ describe('HealthController', () => {
         {
           provide: HealthCheckService,
           useValue: mockHealthCheckService,
+        },
+        {
+          provide: DiskHealthIndicator,
+          useValue: mockDiskHealthIndicator,
+        },
+        {
+          provide: MemoryHealthIndicator,
+          useValue: mockMemoryHealthIndicator,
         },
       ],
     }).compile();

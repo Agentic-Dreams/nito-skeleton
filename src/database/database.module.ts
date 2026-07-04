@@ -5,8 +5,9 @@ import { Pool } from 'pg';
 import { DatabaseService } from './database.service';
 import { RlsService } from './rls.service';
 import * as schema from './schema';
+import { DRIZZLE_PROVIDER } from './database.constants';
 
-export const DRIZZLE_PROVIDER = 'DRIZZLE_PROVIDER';
+export { DRIZZLE_PROVIDER } from './database.constants';
 
 @Global()
 @Module({

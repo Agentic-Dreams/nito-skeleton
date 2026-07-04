@@ -10,7 +10,7 @@ import { Reflector } from '@nestjs/core';
 import { Observable } from 'rxjs';
 import { sql } from 'drizzle-orm';
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
-import { DRIZZLE_PROVIDER } from './database.module';
+import { DRIZZLE_PROVIDER } from './database.constants';
 import { USE_RLS_KEY } from '../common/decorators/use-rls.decorator';
 import * as schema from './schema';
 
